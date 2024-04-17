@@ -3,3 +3,6 @@ title: "Final Project"
 author: "Diane Lin, Stephanie You"
 format: pdf
 ---
+Song hotness - artist familiarity, artist hotness, song duration, artist.terms (genre), start of fade out, start of time fade in, energy
+
+Linear model, interaction linear model, classifier (logistic)
