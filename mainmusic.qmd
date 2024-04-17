@@ -45,6 +45,32 @@ music_filter
 
 #LINEAR MODEL
 
+music_filter <- music_filter |>
+  filter(song.hotttnesss > 0)
+
+music_filter
+
+
+m1 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss 
+         + song.duration + as.factor(gen_genre) + song.start_of_fade_out 
+         + song.end_of_fade_in + song.tempo, 
+         data = music_filter)
+
+
+tidy(m1)
+
+summary(m1)
+
+
+m1_aug <- augment(m1)
+m1_aug|>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "darkred") +
+  labs(title = "Evidence of Constant Variance and Linearity",
+         x = "Fitted hotness",
+         y = "Residuals")
+
 ```
 
 ```{r}
@@ -53,7 +79,15 @@ music_filter
 ```
 
 ```{r}
-classifier
+#classifier
+
+categorical <- music_filter |>
+  mutate(cathot = ifelse(song.hotttnesss <= 0.5, "Not Popular", "Popular"))
+
+categorical
+
+
+
 
 ```
 
