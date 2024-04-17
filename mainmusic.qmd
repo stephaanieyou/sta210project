@@ -3,7 +3,7 @@ title: "Final Project"
 author: "Diane Lin, Stephanie You"
 format: pdf
 ---
-Song hotness - artist familiarity, artist hotness, song duration, artist.terms (genre), start of fade out, start of time fade in, energy
+Song hotness - artist familiarity, artist hotness, song duration, artist.terms (genre), start of fade out, start of time fade in, song tempo
 
 Linear model, interaction linear model, classifier (logistic)
 
@@ -15,7 +15,7 @@ library(tidyverse)
 
 music <- read_csv("music.csv")
 
-````
+```
 
 
 ```{r}
@@ -38,7 +38,7 @@ music_filter <- music_filter |>
 
 music_filter
 
-````
+```
 
 
 ```{r}
@@ -74,19 +74,19 @@ m1_aug|>
 ```
 
 ```{r}
-#LINEAR W INTERACTION
+#LINEAR W INTERACTION, tempo x duration
+library(dplyr)
+
+music_filter <- music_filter %>% filter(song.hotttnesss <= 0)
+
+m2 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duration + as.factor(gen_genre) + song.start_of_fade_out
+         + song.end_of_fade_in + song.tempo + song.duration*song.tempo, data = music_filter)
+summary(m2)
 
 ```
 
 ```{r}
 #classifier
-
-categorical <- music_filter |>
-  mutate(cathot = ifelse(song.hotttnesss <= 0.5, "Not Popular", "Popular"))
-
-categorical
-
-
 
 
 ```
