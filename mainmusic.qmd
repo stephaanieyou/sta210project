@@ -6,3 +6,44 @@ format: pdf
 Song hotness - artist familiarity, artist hotness, song duration, artist.terms (genre), start of fade out, start of time fade in, energy
 
 Linear model, interaction linear model, classifier (logistic)
+
+
+```{r}
+
+library(tidymodels)
+library(tidyverse)
+
+music <- read_csv("music.csv")
+
+````
+
+
+```{r}
+
+music_filter <- music |>
+  filter(str_detect(artist.terms, "rock") |
+         str_detect(artist.terms, "rap") |
+         str_detect(artist.terms, "pop") |
+         str_detect(artist.terms, "country"))
+
+# creating genrealized variables, bc orignial has some subgenres. 
+
+music_filter <- music_filter |>
+  mutate(gen_genre = 
+           if_else(grepl("rock", music_filter$artist.terms),"rock", 
+                   if_else(grepl("rap", music_filter$artist.terms), "rap",
+                           if_else(grepl("pop", music_filter$artist.terms), "pop",
+                                   if_else(grepl("country", music_filter$artist.terms), "country", "other")))))
+
+
+music_filter
+
+````
+
+
+```{r}
+
+#LINEAR MODEL
+
+```
+
