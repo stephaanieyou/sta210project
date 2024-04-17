@@ -88,6 +88,9 @@ summary(m2)
 ```{r}
 #classifier
 
+categorical <- music_filter |>
+  mutate(cathot = ifelse(song.hotttnesss <= 0.5, "Not Popular", "Popular"))
 
+categorical
 ```
 
