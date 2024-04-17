@@ -76,8 +76,7 @@ m1_aug|>
 ```{r}
 #LINEAR W INTERACTION, tempo x duration
 library(dplyr)
-
-music_filter <- music_filter %>% filter(song.hotttnesss <= 0)
+#music_filter
 
 m2 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duration + as.factor(gen_genre) + song.start_of_fade_out
          + song.end_of_fade_in + song.tempo + song.duration*song.tempo, data = music_filter)
@@ -89,8 +88,19 @@ summary(m2)
 #classifier
 
 categorical <- music_filter |>
-  mutate(cathot = ifelse(song.hotttnesss <= 0.5, "Not Popular", "Popular"))
+  mutate(cathot = ifelse(song.hotttnesss <= 0.5, 0, 1))
 
 categorical
+
+m3 <- glm(as.factor(cathot) ~ artist.familiarity + artist.hotttnesss 
+         + song.duration + as.factor(gen_genre) + song.start_of_fade_out 
+         + song.end_of_fade_in + song.tempo,
+  data = categorical,
+  family = "binomial")
+
+tidy(m3)s
+ 
+
+
 ```
 
