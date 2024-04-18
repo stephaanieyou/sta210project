@@ -35,8 +35,11 @@ music_filter <- music_filter |>
                            if_else(grepl("pop", music_filter$artist.terms), "pop",
                                    if_else(grepl("country", music_filter$artist.terms), "country", "other")))))
 
+
 music_filter <- music_filter |>
   filter(song.hotttnesss > 0)
+
+
 
 
 music_filter
@@ -68,22 +71,14 @@ ggplot(music_filter, aes(x = song.tempo, y = song.hotttnesss)) +
   labs(x = "Song Tempo (in beats per minute)", y = "Song Hottness (from 0 to 1)",
        title = "Faster songs do not imply song hotness")
 
-data_range <- max(music_filter$song.tempo, na.rm = TRUE) - min(music_filter$song.tempo, na.rm = TRUE)
-width <- data_range/sqrt(nrow(music_filter))
-width
-
-
-ggplot(music_filter, aes(x = song.tempo)) +
-  geom_histogram(binwidth = 6, fill = "blue", color = "black") +
-  labs(x = "Song Tempo", y = "Count",
-       title = "Most songs are 100-150 BPM (allegro)")
-
-ggplot(music_filter, aes(x = song.tempo)) +
-  geom_histogram(binwidth = 6, fill = "blue", color = "black") +
+ggplot(music_filter, aes(x = song.tempo, y = song.hotttnesss)) + 
+  geom_point()+
   facet_wrap(~ gen_genre, scales = "free") +
-  labs(x = "Song Tempo", y = "Count")
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Song Tempo (in beats per minute)", y = "Song Hottness (from 0 to 1)",
+       title = "Faster songs do not imply song hotness within genres")
 
- 
+
 ```
 
 
@@ -113,7 +108,7 @@ m1_aug|>
   ggplot(aes(x = .fitted, y = .resid)) +
   geom_point() +
   geom_hline(yintercept = 0, color = "darkred") +
-  labs(title = "Evidence of Constant Variance and Linearity",
+  labs(title = "No evidence of linearity",
          x = "Fitted hotness",
          y = "Residuals")
 
@@ -125,7 +120,7 @@ library(dplyr)
 #music_filter
 
 m2 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duration + as.factor(gen_genre) + song.start_of_fade_out
-         + song.end_of_fade_in + song.tempo + song.duration*song.tempo, data = music_filter)
+         + song.end_of_fade_in + song.tempo + as.factor(gen_genre)*artist.familiarity, data = music_filter)
 summary(m2)
 
 m2_aug <- augment(m2)
@@ -144,7 +139,7 @@ m2_aug|>
 #classifier
 
 categorical <- music_filter |>
-  mutate(cathot = ifelse(song.hotttnesss <= 0.5, 0, 1))
+  mutate(cathot = ifelse(song.hotttnesss > 0.5, 1, 0))
 
 categorical
 
@@ -154,9 +149,16 @@ m3 <- glm(as.factor(cathot) ~ artist.familiarity + artist.hotttnesss
   data = categorical,
   family = "binomial")
 
-tidy(m3)
- 
+m3_aug <- augment(m3, newdata = categorical, type.predict = "response")
+print(m3_aug)
 
+m3_confusion <- m3_aug %>%
+  mutate(prob = exp(.fitted) / (1 + exp(.fitted)),
+         pred_class = ifelse(prob > 0.5, "hot", "not hot")) %>%
+  select(.fitted, prob, pred_class, cathot)
+
+confusion_matrix <- table(m3_confusion$pred_class,m3_confusion$cathot)
+confusion_matrix
 
 ```
 
