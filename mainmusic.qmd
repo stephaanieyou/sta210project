@@ -82,6 +82,16 @@ m2 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duratio
          + song.end_of_fade_in + song.tempo + song.duration*song.tempo, data = music_filter)
 summary(m2)
 
+m2_aug <- augment(m2)
+m2_aug|>
+  ggplot(aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "darkred") +
+  labs(title = "No evidence of linearity",
+         x = "Fitted hotness",
+         y = "Residuals")
+
+
 ```
 
 ```{r}
@@ -98,7 +108,7 @@ m3 <- glm(as.factor(cathot) ~ artist.familiarity + artist.hotttnesss
   data = categorical,
   family = "binomial")
 
-tidy(m3)s
+tidy(m3)
  
 
 
