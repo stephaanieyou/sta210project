@@ -8,7 +8,7 @@ Song hotness - artist familiarity, artist hotness, song duration, artist.terms (
 Linear model, interaction linear model, classifier (logistic)
 
 
-```{r}
+```{r messages=F, warnings=F}
 
 library(tidymodels)
 library(tidyverse)
@@ -18,7 +18,7 @@ music <- read_csv("music.csv")
 ```
 
 
-```{r}
+```{r messages=F, warnings=F}
 
 music_filter <- music |>
   filter(str_detect(artist.terms, "rock") |
@@ -35,13 +35,59 @@ music_filter <- music_filter |>
                            if_else(grepl("pop", music_filter$artist.terms), "pop",
                                    if_else(grepl("country", music_filter$artist.terms), "country", "other")))))
 
+music_filter <- music_filter |>
+  filter(song.hotttnesss > 0)
+
 
 music_filter
 
 ```
+```{r eda, messages=F, warnings=F}
+tidy_summary <- sapply(music, summary)
+print(tidy_summary)
+
+ggplot(music_filter, aes(x = artist.familiarity, y = song.hotttnesss)) + 
+  geom_point()+
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Artist Familiarity (from 0 to 1)", y = "Song Hottness (from 0 to 1)",
+       title = "Artist familiarity does not necessarily imply song hottness")
+
+ggplot(music_filter, aes(x = artist.familiarity, y = song.hotttnesss)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  facet_wrap(~ gen_genre, scales = "free") +  # Replace 'genre' with the actual column name
+  labs(x = "Artist Familiarity (from 0 to 1)", y = "Song Hottness (from 0 to 1)",
+       title = "Song hotness may depend on genre")
 
 
-```{r}
+```
+```{r eda-2, message=F, warning=F}
+ggplot(music_filter, aes(x = song.tempo, y = song.hotttnesss)) + 
+  geom_point()+
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Song Tempo (in beats per minute)", y = "Song Hottness (from 0 to 1)",
+       title = "Faster songs do not imply song hotness")
+
+data_range <- max(music_filter$song.tempo, na.rm = TRUE) - min(music_filter$song.tempo, na.rm = TRUE)
+width <- data_range/sqrt(nrow(music_filter))
+width
+
+
+ggplot(music_filter, aes(x = song.tempo)) +
+  geom_histogram(binwidth = 6, fill = "blue", color = "black") +
+  labs(x = "Song Tempo", y = "Count",
+       title = "Most songs are 100-150 BPM (allegro)")
+
+ggplot(music_filter, aes(x = song.tempo)) +
+  geom_histogram(binwidth = 6, fill = "blue", color = "black") +
+  facet_wrap(~ gen_genre, scales = "free") +
+  labs(x = "Song Tempo", y = "Count")
+
+ 
+```
+
+
+```{r message=F, warning=F}
 
 #LINEAR MODEL
 
@@ -73,7 +119,7 @@ m1_aug|>
 
 ```
 
-```{r}
+```{r messages=F, warnings=F}
 #LINEAR W INTERACTION, tempo x duration
 library(dplyr)
 #music_filter
@@ -94,7 +140,7 @@ m2_aug|>
 
 ```
 
-```{r}
+```{r  messages=F, warnings=F}
 #classifier
 
 categorical <- music_filter |>
