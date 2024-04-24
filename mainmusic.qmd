@@ -2,12 +2,9 @@
 title: "Final Project"
 author: "Diane Lin, Stephanie You"
 format: pdf
+execute:
+  echo: false
 ---
-Song hotness - artist familiarity, artist hotness, song duration, artist.terms (genre), start of fade out, start of time fade in, song tempo
-
-Linear model, interaction linear model, classifier (logistic)
-
-
 ```{r messages=F, warnings=F}
 
 library(tidymodels)
@@ -16,8 +13,35 @@ library(tidyverse)
 music <- read_csv("music.csv")
 
 ```
+# Introduction and Data
+## Project Motivation 
+Our project stems from a shared passion for music and a curiosity about the factors influencing song popularity. In an era dominated by viral trends on platforms like TikTok, where snippets of songs can propel them to stardom, we were intrigued by the possibility of predicting song popularity using quantitative metrics. According to the SongTown music podcast, a part of a song being a 'hit' may be attributed to the lyrics, but the most important factor is the song's 'fit' with the artist and the producer. This realization led us to consider not just the lyrical content and melody of songs but also how well they align with the artist's style and the producer's vision. 
 
+## Data
+In our pursuit to understand the dynamics of song popularity, we turn to the Million Song Dataset as our guide. There were several curators for this dataset---the Million Song Dataset used a company called the Echo Nest to derive data points about one million contemporary songs. It was also a collaboration between the Echo Nest and LabROSA (laboratory working towards intelligent machine listening). It was collected in 2011. Though it is now 2024, old songs that were popular have resurfaced on TikTok, showing that data collected 13 years ago is still relevant. The link for it is here: http://millionsongdataset.com/faq/ 
 
+## Research Question
+How effectively can the combination of artist hotness, artist familiarity, song duration, tempo, fade times, and genre predict a song's hotness? Further, can we find sufficient evidence that an artist's familiarity differs based on genre?
+
+## Relevant Variables
+**Song Hotness:** Our response variable. Indicates the hotness/popularity of a song between 0 and 1, with 1 being the highest value. Continuous numeric variable. 
+
+**Artist Hotness:** Indicates how much 'buzz' the artist is getting when the song was downloaded, on a scale of 0 to 1, with 1 being the highest value. Continuous numeric variable.
+
+**Artist Familiarity:** Indication of high well known the artist is, on a scale of 0 to 1, with 1 being the highest value. Continuous numeric variable.
+
+**Song Duration:** Duration of a song, in seconds. Continuous numeric variable.
+
+**Tempo:** Tempo in BPM of a song. Continuous numeric variable.
+
+**Start of Fade Out:** Start time of the fade out, in seconds, at the end of a song. Continuous numeric variable.
+
+**End of Fade In:** Time of the end of the fade in, at the beginning of the song. Continuous numeric variable.
+
+**Genre:** Array string of genres the artist is associated with. See **data cleaning** for more. Categorical variable.
+
+## Cleaning Process
+We narrowed our focus to four primary genres: rap, rock, pop, and country, capturing a broad spectrum of musical styles while minimizing complexity. We further simplified the genre landscape by generalizing subgenres (ex: Classical rock)  into overarching categories (Rock), and creating a new variable, gen_genre, with those overarching categories. Then, we filtered for all song.hotttnesss scores that were less than zero, because those made no sense according to the documentation for this (when checking the values that were less than 0, there were 6 rows, with a song.hotttnesss of -1. We concluded that it was a placeholder for datapoints with a null value for song hotness).
 ```{r messages=F, warnings=F}
 
 music_filter <- music |>
@@ -42,12 +66,14 @@ music_filter <- music_filter |>
 
 
 
-music_filter
+head(music_filter)
 
 ```
+## EDA
+We hypothesized two of the most important factors in determining song popularity was artist familiarty and genre, as people are more inclined to listen to the artists that are 'cool' at the time, and based on personal experience, 2011 was dominated by pop music. Thus, we created scatter plots to visualize the relationships.
 ```{r eda, messages=F, warnings=F}
 tidy_summary <- sapply(music, summary)
-print(tidy_summary)
+#print(tidy_summary)
 
 ggplot(music_filter, aes(x = artist.familiarity, y = song.hotttnesss)) + 
   geom_point()+
@@ -64,6 +90,7 @@ ggplot(music_filter, aes(x = artist.familiarity, y = song.hotttnesss)) +
 
 
 ```
+Because pop and rap songs have a reputation of being faster, we wanted to explore the relationship between song tempo, genre, and song hotness. We found that faster songs do not imply song hotness.
 ```{r eda-2, message=F, warning=F}
 ggplot(music_filter, aes(x = song.tempo, y = song.hotttnesss)) + 
   geom_point()+
@@ -80,7 +107,11 @@ ggplot(music_filter, aes(x = song.tempo, y = song.hotttnesss)) +
 
 
 ```
+# Methodology
+To get a comprehensive understanding of how well (or poorly) the predictors we had picked could predict song hotness, we decided to create more than one model. Since our response variable, song hotness, is a continuous numeric variable, we will be using a linear regression model.
 
+## Model Creation
+First, we fit a regular linear model, using artist familiarity, artist hottness, song duration, genre, start of fade out, end of fade in, and song tempo as the predictors. 
 
 ```{r message=F, warning=F}
 
@@ -112,10 +143,22 @@ m1_aug|>
          x = "Fitted hotness",
          y = "Residuals")
 
+m1_qq <- ggplot(m1_aug, aes(sample = .resid)) +
+  stat_qq()+
+  stat_qq_line()+
+  theme_bw()+
+  labs(x="Theoretical quantiles",
+       y = "Sample quantiles")
+m1_qq
+
 ```
+## Model Assumptions
+It is also important to discuss the assumptions of linear regression, like independence, linearity, normal distribution, and variance. We assume independence is satisfied, as knowing the information about one song does not tell us anything about another song. This makes sense, as each song has its own audio features, like tempo, fade times, and duration. Linearity is violated since we see non-symmetry in the residual plot around the horizontal axis. Constant variance seems to be violated as the variability of the residuals appears to increase for larger predicted values of hotness. Normality is satisfied, as there is not a large deviation from what is expected.
+
+## Possible Interactions
+Different music genres cater to distinct audience expectations. Pop is the primary genre streamed on music listening platforms. However, in nicher genres, familiarity plays a bigger role than the style of the song. For instance, a listener may not be inclined to listen to heavy rock, but may know big names in the rock industry, like Blink-182. Thus, we have reason to believe that there is a relationship between genre and artist familiarity that is not merely additive, making it a significant factor to consider in models predicting song hotness.
 
 ```{r messages=F, warnings=F}
-#LINEAR W INTERACTION, tempo x duration
 library(dplyr)
 #music_filter
 
@@ -123,66 +166,40 @@ m2 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duratio
          + song.end_of_fade_in + song.tempo + as.factor(gen_genre)*artist.familiarity, data = music_filter)
 summary(m2)
 
-m2_aug <- augment(m2)
-m2_aug|>
-  ggplot(aes(x = .fitted, y = .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0, color = "darkred") +
-  labs(title = "No evidence of linearity",
-         x = "Fitted hotness",
-         y = "Residuals")
-
-
 ```
+The artist hotness and genre term interaction contrasts that of artist familiarity and genre. In mainstream genres, like pop, an artist's hotness might significantly boost song popularity due to the genres' reliance on media exposure and trend cycles. Conversely, in nicher genres, where music depth is more valued, the style of the music may trump artist hotness.Therefore, we have reason to believe that incorporation artist hotness and genre as an interaction term allows us to see how genre influences the relationship between an artist's market presence and a song's success, and how an artist's presence influences the relationship between genre and a song's success.
 
 ```{r  messages=F, warnings=F}
-#classifier
 
-categorical <- music_filter |>
-  mutate(cathot = ifelse(song.hotttnesss > 0.5, 1, 0))
-
-categorical
 
 m3 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duration + as.factor(gen_genre) + song.start_of_fade_out
          + song.end_of_fade_in + song.tempo + as.factor(gen_genre)*artist.hotttnesss, data = music_filter)
 summary(m3)
-m3_aug <- augment(m3)
-
-m3_aug|>
-  ggplot(aes(x = .fitted, y = .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0, color = "darkred") +
-  labs(title = "No evidence of linearity",
-         x = "Fitted hotness",
-         y = "Residuals")
-
 
 ```
-```{r  messages=F, warnings=F}
-#classifier
+## Comparing Models
+To compare the models, we analyzed the adjusted r-squared values. Our linear model performed rather poorly, with an Adjusted R-squared of 0.2501. However, we wanted to run more than one model before deciding if these predictors were able to predict song hotness. Thus, we decided to fit another linear model, with an interaction term of artist familiarity and genre. We did this based on our exploratory data analysis that showed that there was some correlation between artist familiarity and song hotness for songs of certain genres. This model performed slightly better than our original linear model, with an adjusted R Squared of 0.255. We also ran the linear model with an interaction term of artist hotness and genre. This model had an r squared value of 0.2517.
 
-categorical <- music_filter |>
-  mutate(cathot = ifelse(song.hotttnesss > 0.5, 1, 0))
+## Addressing Violations
+One concern we had was that linearity was violated for both models. The residual plots for both showed that the residuals were not randomly scattered, and there was a definite pattern towards the smaller residuals. While our choice to fit a linear regression model may seem counterintuitive given the violation of the linearity assumption, it was a pragmatic decision based on several considerations. Firstly, linear regression is a widely used and well-understood modeling technique, making it accessible and interpretable for our analysis. Despite its reliance on the assumption of linearity, linear regression can still provide valuable insights and predictive accuracy under certain conditions.
 
-categorical
+Specifically, the violation of the linearity assumption doesn’t invalidate the entire model. Linear regression models can still yield reasonable results even when the relationship between the predictors and the response variable is not strictly linear. Furthermore, we are more concerned with the general performance of our model ; if it performed well or poorly is more of an indicator of if our predictors are good predictors, rather than if the model is a valid model or not. 
 
-m4 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duration + as.factor(gen_genre) + song.start_of_fade_out
-         + song.end_of_fade_in + song.tempo + as.factor(gen_genre)*song.duration, data = music_filter)
-summary(m4)
+# Results
+By the methodology above, we chose the model with the largest r^2 value -- the second model, with an interaction term of artist familiarity and genre.
 
-m4_aug <- augment(m4)
-
-m4_aug|>
-  ggplot(aes(x = .fitted, y = .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0, color = "darkred") +
-  labs(title = "No evidence of linearity",
-         x = "Fitted hotness",
-         y = "Residuals")
-
+```{r}
+m2 <- lm(song.hotttnesss ~ artist.familiarity + artist.hotttnesss + song.duration + as.factor(gen_genre) + song.start_of_fade_out
+         + song.end_of_fade_in + song.tempo + artist.familiarity*as.factor(gen_genre), data = music_filter)
+summary(m2)
 
 ```
+We have insufficient evidence to suggest differential song hotness based on artist familiarity by genre, as the p-value for the interaction term is greater than our significance level of 0.05.
 
+**Disclaimer/TO-DO/Note:** We ran out of time to do slope interpretations, but it will be in our final report.
 
+# Discussion
+Our models performed poorly, indicating that our predictors weren't good predictors. This is evident in the r^2 values, which were in the 0.2 range. r^2 values range from 0 to 1, where 0 indicates that none of the variation in the response variable is accounted for by the predictors. In the future, we will include a broader range of genres, and take into account more predictor values, such as song key and loudness. In our final model, we were not surprised to find that there was insufficient evidence to suggest song hotness based on artist familiarity by genre. Especially in the present day, we don't see people listening to songs merely because they are by well-known artist names. Instead, we tend to focus on trends, specifically artist hotness, which is why on TikTok, where smaller artists like wave2earth, Dasha, and DJO gain fame through their stylistic choices. 
 
+**adding more to this in final report**
 
