@@ -5,7 +5,6 @@ format: pdf
 output: 
   pdf_document:
     latex_engine: xelatex
-    fontsize: 8pt
 ---
 ```{r messages=F, warnings=F, echo=F, include=F}
 
@@ -18,6 +17,12 @@ music <- read_csv("music.csv")
 ## Introduction and Data
 ### Project Motivation 
 Our project stems from a shared passion for music and a curiosity about the factors influencing song popularity. In an era dominated by viral trends on platforms like TikTok, where snippets of songs can propel them to stardom, we were intrigued by the possibility of predicting song popularity using quantitative metrics. According to the SongTown music podcast, a part of a song being a 'hit' may be attributed to the lyrics, but the most important factor is the song's 'fit' with the artist and the producer. This realization led us to consider not just the lyrical content and melody of songs but also how well they align with the artist's style and the producer's vision. 
+
+An article released by The Guardian talks about forgotten bands seeing the limelight again thanks to Gen Z. For example, Keane's "Somewhere Only We Know" was a part of the band's 2004 debut single. It wasn't until last summer when member Tim Rice-Oxley noticed that "suddenly there were lots of much younger people" in the audience, due to TikTok. However, "Somewhere Only We Know" didn't need the boost, as it was huge at the time of Keane's debut. 
+
+Most TikTok users won’t explore an artist’s work beyond their viral hit, but if just a small percentage of tens of millions of new listeners become genuine fans, it can make a huge difference. Songs usually go viral when they become attached to a certain format or message, but there are also examples where songs become viral due to being attached to a timeless genre. According to Today, Icelandic musician Laufey released her debut album that garnered almost 700K followers and over 18M likes on Tiktok. Her discography, which has been likened to the soundtracks of Disney or a Studio Ghibli film, has encouraged younger generations to fall in love with jazz and classical music. She now boasts almost 3 millon monthly listeners on Spotify.
+
+GenZ's obsession with nostalgia allows us to beg the question: what causes a song to go viral or experience bursts of virality? Are factors that make a song popular the same in the past as they are now?
 
 ### Data
 In our pursuit to understand the dynamics of song popularity, we turn to the Million Song Dataset as our guide. There were several curators for this dataset---the Million Song Dataset used a company called the Echo Nest to derive data points about one million contemporary songs. It was also a collaboration between the Echo Nest and LabROSA (laboratory working towards intelligent machine listening). It was collected in 2011. Though it is now 2024, old songs that were popular have resurfaced on TikTok, showing that data collected 13 years ago is still relevant. The link for it is here: http://millionsongdataset.com/faq/ 
@@ -168,11 +173,33 @@ To compare the models, we analyzed the adjusted r-squared values. Our linear mod
 One concern we had was that linearity was violated for both models. The residual plots for both showed that the residuals were not randomly scattered, and there was a definite pattern towards the smaller residuals. While our choice to fit a linear regression model may seem counterintuitive given the violation of the linearity assumption, it was a pragmatic decision based on several considerations. Firstly, linear regression is a widely used and well-understood modeling technique, making it accessible and interpretable for our analysis. Despite its reliance on the assumption of linearity, linear regression can still provide valuable insights and predictive accuracy under certain conditions. Specifically, the violation of the linearity assumption doesn’t invalidate the entire model. Linear regression models can still yield reasonable results even when the relationship between the predictors and the response variable is not strictly linear. Furthermore, we are more concerned with the general performance of our model ; if it performed well or poorly is more of an indicator of if our predictors are good predictors, rather than if the model is a valid model or not. 
 
 ## Results
-By the methodology above, we chose the model with the largest r^2 value -- the second model (**reference m2 above**), with an interaction term of artist familiarity and genre.
+By the methodology above, we chose the model with the largest r^2 value -- the second model, with an interaction term of artist familiarity and genre.
+
+```{r messages=F, warnings=F, echo=F}
+tidy(summary(m2))
+```
 
 We have insufficient evidence to suggest differential song hotness based on artist familiarity by genre, as the p-value for the interaction term is greater than our significance level of 0.05.
 
+Given our p-value of 1.4*10^-10 for artist hotness, which is less than 𝛼 = 0.05, we can see that there is sufficient evidence to suggest that there is a linear relationship between artist hotness and song hotness, which controlling for the other variables in our model. For every one unit increase in artist hotness, we expect an average increase of 0.3148694 in song hotness , while controlling for the other variables in our model.
+
+
 ## Discussion
-Our models performed poorly, indicating that our predictors weren't good predictors. This is evident in the r^2 values, which were in the 0.2 range. r^2 values range from 0 to 1, where 0 indicates that none of the variation in the response variable is accounted for by the predictors. In the future, we will include a broader range of genres, and take into account more predictor values, such as song key and loudness. In our final model, we were not surprised to find that there was insufficient evidence to suggest song hotness based on artist familiarity by genre. Especially in the present day, we don't see people listening to songs merely because they are by well-known artist names. Instead, we tend to focus on trends, specifically artist hotness, which is why on TikTok, where smaller artists like wave2earth, Dasha, and DJO gain fame through their stylistic choices. 
+Our models performed poorly, indicating that our predictors weren't good predictors. This is evident in the r^2 values, which were in the 0.2 range. r^2 values range from 0 to 1, where 0 indicates that none of the variation in the response variable is accounted for by the predictors. This may be partly attributed to data limitations, such as the dataset's bias towards mainstream genres and lack of representation for niche or emerging music styles. Furthermore, as discussed before, we had concerns with the violation of the linearity assumption, but decided to look at our models regardless. Future work could include a broader range of genres, and take into account more predictor values, such as song key and loudness. 
+
+In our final model, we were not surprised to find that there was insufficient evidence to suggest song hotness based on artist familiarity by genre. Especially in the present day, we don't see people listening to songs merely because they are by well-known artist names. Instead, we tend to focus on trends, specifically artist hotness, which is why on TikTok, where smaller artists like wave2earth, Dasha, and DJO gain fame through their stylistic choices, but are also easily forgotten as new trends with different types of music emerge. In 2011, the same principle seems to have been true; as trends that are influenced by our world came and went, they influenced the type of music that was popular each year. 
+
+## Appendix
+http://millionsongdataset.com/ 
+
+https://songtown.com/on-songwriting/what-makes-a-great-song-a-hit-song/
+
+https://www.theguardian.com/music/2023/dec/11/viral-hit-tiktok-gen-z-mother-ladytron-keane-miguel 
+
+https://www.today.com/popculture/music/laufey-jazz-classical-music-gen-z-rcna56020
+
+
+
+
 
 
