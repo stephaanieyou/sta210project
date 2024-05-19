@@ -244,7 +244,7 @@ tidy(summary(m2)) %>%
 
 We have insufficient evidence to suggest differential song hotness based on artist familiarity by genre, as the p-value for the interaction term is greater than our significance level of 0.05.
 
-Given our p-value of 1.4*10^-10 for artist hotness, which is less than 𝛼 = 0.05, we can see that there is sufficient evidence to suggest that there is a linear relationship between artist hotness and song hotness, which controlling for the other variables in our model. For every one unit increase in artist hotness, we expect an average increase of 0.3148694 in song hotness , while controlling for the other variables in our model.
+Given our p-value of 1.4*10^-10 for artist hotness, which is less than $\alpha$ = 0.05, we can see that there is sufficient evidence to suggest that there is a linear relationship between artist hotness and song hotness, which controlling for the other variables in our model. For every one unit increase in artist hotness, we expect an average increase of 0.3148694 in song hotness , while controlling for the other variables in our model.
 
 
 ## Discussion
