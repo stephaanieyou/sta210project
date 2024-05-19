@@ -1,5 +1,5 @@
 ---
-title: "Final Project"
+title: "Understanding What Makes a Song a Hit"
 author: "Diane Lin, Stephanie You"
 format: pdf
 output: 
@@ -10,6 +10,8 @@ output:
 
 library(tidymodels)
 library(tidyverse)
+library(kableExtra)
+library(dplyr)
 
 music <- read_csv("music.csv")
 
@@ -70,7 +72,14 @@ music_filter <- music_filter |>
 music_filter <- music_filter |>
   filter(song.hotttnesss > 0)
 
-head(music_filter)
+
+#head(music_filter)
+head(music_filter %>%
+  select(artist_familiarity, song_hotness, artist_hotness, duration, tempo, fade_out, fade_in, gen_genre)) %>%
+  kbl() %>%
+  kable_classic(full_width=F, html_font="Cambria") %>%
+  kable_styling(font_size = 10)
+
 ```
 ### EDA
 We hypothesized two of the most important factors in determining song popularity was artist familiarty and genre, as people are more inclined to listen to the artists that are 'cool' at the time, and based on personal experience, 2011 was dominated by pop music. Thus, we created scatter plots to visualize the relationships.
@@ -112,7 +121,8 @@ To get a comprehensive understanding of how well (or poorly) the predictors we h
 
 First, we fit a regular linear model, using artist familiarity, artist hottness, song duration, genre, start of fade out, end of fade in, and song tempo as the predictors. 
 
-```{r message=F, warning=F, echo=F}
+
+```{r eda3, message=F, warning=F, echo=F}
 
 #LINEAR MODEL
 
@@ -123,7 +133,25 @@ m1 <- lm(song_hotness ~ artist_familiarity + artist_hotness
          + fade_in + tempo, 
          data = music_filter)
 
-tidy(summary(m1))
+m1_rsquared <- summary(m1)$r.squared
+m1_adj_rsquared <- summary(m1)$r.squared
+
+m1_rsquared_df <- data.frame(
+  Metric = c("R-squared", "Adjusted R-squared"),
+  Value = c(m1_rsquared, m1_adj_rsquared)
+)
+ 
+tidy(summary(m1)) %>%
+  kbl() %>%
+  kable_classic(full_width=F, html_font="Cambria") %>%
+  kable_styling(font_size = 10, latex_options = "H")
+
+m1_rsquared_df %>%
+  kbl() %>%
+  kable_classic(full_width = F, html_font="Cambria") %>%
+  kable_styling(font_size = 10, latex_options="H")
+ 
+
 
 m1_aug <- augment(m1)
 m1_aug|>
@@ -155,7 +183,23 @@ library(dplyr)
 
 m2 <- lm(song_hotness ~ artist_familiarity + artist_hotness + duration + as.factor(gen_genre) + fade_out
          + fade_in + tempo + as.factor(gen_genre)*artist_familiarity, data = music_filter)
-tidy(summary(m2))
+m2_rsquared <- summary(m2)$r.squared
+m2_adj_rsquared <- summary(m2)$r.squared
+
+m2_rsquared_df <- data.frame(
+  Metric = c("R-squared", "Adjusted R-squared"),
+  Value = c(m2_rsquared, m2_adj_rsquared)
+)
+ 
+tidy(summary(m2)) %>%
+  kbl() %>%
+  kable_classic(full_width=F, html_font="Cambria") %>%
+  kable_styling(font_size = 10, latex_options = "H")
+
+m2_rsquared_df %>%
+  kbl() %>%
+  kable_classic(full_width = F, html_font="Cambria") %>%
+  kable_styling(font_size = 10, latex_options="H")
 
 ```
 The artist hotness and genre term interaction contrasts that of artist familiarity and genre. In mainstream genres, like pop, an artist's hotness might significantly boost song popularity due to the genres' reliance on media exposure and trend cycles. Conversely, in nicher genres, where music depth is more valued, the style of the music may trump artist hotness.Therefore, we have reason to believe that incorporation artist hotness and genre as an interaction term allows us to see how genre influences the relationship between an artist's market presence and a song's success, and how an artist's presence influences the relationship between genre and a song's success.
@@ -164,10 +208,26 @@ The artist hotness and genre term interaction contrasts that of artist familiari
 
 m3 <- lm(song_hotness ~ artist_familiarity + artist_hotness + duration + as.factor(gen_genre) + fade_out
          + fade_in + tempo + as.factor(gen_genre)*artist_hotness, data = music_filter)
-tidy(summary(m3))
+m3_rsquared <- summary(m3)$r.squared
+m3_adj_rsquared <- summary(m3)$r.squared
+
+m3_rsquared_df <- data.frame(
+  Metric = c("R-squared", "Adjusted R-squared"),
+  Value = c(m3_rsquared, m3_adj_rsquared)
+)
+ 
+tidy(summary(m3)) %>%
+  kbl() %>%
+  kable_classic(full_width=F, html_font="Cambria") %>%
+  kable_styling(font_size = 10, latex_options = "H")
+
+m3_rsquared_df %>%
+  kbl() %>%
+  kable_classic(full_width = F, html_font="Cambria") %>%
+  kable_styling(font_size = 10, latex_options="H")
 ```
 ### Comparing Models
-To compare the models, we analyzed the adjusted r-squared values. Our linear model performed rather poorly, with an Adjusted R-squared of 0.2501. However, we wanted to run more than one model before deciding if these predictors were able to predict song hotness. Thus, we decided to fit another linear model, with an interaction term of artist familiarity and genre. We did this based on our exploratory data analysis that showed that there was some correlation between artist familiarity and song hotness for songs of certain genres. This model performed slightly better than our original linear model, with an adjusted R Squared of 0.255. We also ran the linear model with an interaction term of artist hotness and genre. This model had an r squared value of 0.2517.
+To compare the models, we analyzed the adjusted r-squared values. Our linear model performed rather poorly, with an Adjusted R-squared of 0.2501. However, we wanted to run more than one model before deciding if these predictors were able to predict song hotness. Thus, we decided to fit another linear model, with an interaction term of artist familiarity and genre. We did this based on our exploratory data analysis that showed that there was some correlation between artist familiarity and song hotness for songs of certain genres. This model performed slightly better than our original linear model, with an adjusted R Squared of 0.2614. We also ran the linear model with an interaction term of artist hotness and genre. This model had an r squared value of 0.2517.
 
 ### Addressing Violations
 One concern we had was that linearity was violated for both models. The residual plots for both showed that the residuals were not randomly scattered, and there was a definite pattern towards the smaller residuals. While our choice to fit a linear regression model may seem counterintuitive given the violation of the linearity assumption, it was a pragmatic decision based on several considerations. Firstly, linear regression is a widely used and well-understood modeling technique, making it accessible and interpretable for our analysis. Despite its reliance on the assumption of linearity, linear regression can still provide valuable insights and predictive accuracy under certain conditions. Specifically, the violation of the linearity assumption doesn’t invalidate the entire model. Linear regression models can still yield reasonable results even when the relationship between the predictors and the response variable is not strictly linear. Furthermore, we are more concerned with the general performance of our model ; if it performed well or poorly is more of an indicator of if our predictors are good predictors, rather than if the model is a valid model or not. 
@@ -176,7 +236,10 @@ One concern we had was that linearity was violated for both models. The residual
 By the methodology above, we chose the model with the largest r^2 value -- the second model, with an interaction term of artist familiarity and genre.
 
 ```{r messages=F, warnings=F, echo=F}
-tidy(summary(m2))
+tidy(summary(m2)) %>%
+  kbl() %>%
+  kable_classic(full_width=F, html_font="Cambria") %>%
+  kable_styling(font_size = 10, latex_options = "H")
 ```
 
 We have insufficient evidence to suggest differential song hotness based on artist familiarity by genre, as the p-value for the interaction term is greater than our significance level of 0.05.
